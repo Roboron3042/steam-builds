@@ -12,25 +12,27 @@ jobs:
 
     - name: install_dependencies
       run: |
-        brew reinstall cmake pkg-config libpng freetype zstd sdl2 fluidsynth
+        brew reinstall cmake pkg-config libpng freetype zstd sdl2 fluidsynth subversion
 
     - name: build
       run: |
-        mkdir build
-        cd build
-        cmake -DCMAKE_BUILD_TYPE=Release ..
-        cmake --build . --target install
+        svn checkout svn://servers.simutrans.org/simutrans/trunk . #-r 10421
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DOPTION_BUNDLE_LIBRARIES=ON -DSIMUTRANS_STEAM_BUILT=ON #-DSIMUTRANS_USE_REVISION=10421
+        cmake --build build -j$(nproc)
 
     - name: distribute
       run: |
         cd build
-        zip -r simumac-nightly.zip simutrans
+        mkdir 434524
+        mv simutrans/simutrans.app 434524/
+        cd 434524
+        zip -r macos-434524.zip simutrans.app
 
-    - name: Update binaries of Nightly Release
+    - name: Update bmacos depot
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: build/simumac-nightly.zip
-        asset_name: simumac-intel-nightly.zip
+        file: build/434524/macos-434524.zip
+        asset_name: macos-434524.zip
         tag: Nightly
         overwrite: true
