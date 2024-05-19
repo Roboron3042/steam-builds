@@ -23,7 +23,7 @@ Index: cmake/MacBundle.cmake
  set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR})
  
 +if (SIMUTRANS_STEAM_BUILT)
-+	install(FILES ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/osx/libsteam_api.dylib DESTINATION ${CMAKE_BINARY_DIR}/simutrans/simutrans.app/Contents/Frameworks/libsteam_api.dylib)
++	install(FILES ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/osx/libsteam_api.dylib DESTINATION ${CMAKE_BINARY_DIR}/simutrans/simutrans.app/Contents/Frameworks)
 +endif ()
 +
  install(CODE "
