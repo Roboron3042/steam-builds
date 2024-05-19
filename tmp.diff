@@ -2,23 +2,28 @@ Index: CMakeLists.txt
 ===================================================================
 --- CMakeLists.txt	(revisión: 11214)
 +++ CMakeLists.txt	(copia de trabajo)
-@@ -249,6 +249,7 @@
+@@ -249,19 +249,23 @@
  endif ((SIMUTRANS_BACKEND STREQUAL "sdl2") OR (SIMUTRANS_BACKEND STREQUAL "gdi"))
  
  if (SIMUTRANS_STEAM_BUILT AND NOT ANDROID)
 +	target_compile_definitions(simutrans PRIVATE STEAM_BUILT=1)
  	target_sources(simutrans PRIVATE src/steam/steam.cc src/steam/workshop_item.cc src/steam/achievements.cc )
- 	add_library(steam SHARED IMPORTED)
+-	add_library(steam SHARED IMPORTED)
  	if(APPLE)
-@@ -255,13 +256,13 @@
++		add_library(steam SHARED IMPORTED)
  		set_target_properties(steam PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/osx/libsteam_api.dylib)
  	elseif(UNIX)
++		add_library(steam SHARED IMPORTED)
  		set_target_properties(steam PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/linux64/libsteam_api.so)
 -	elseif(MAKE_GENERATOR_PLATFORM MATCHES "Win32")
+-		set_target_properties(steam PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/win64/steam_api64.dll)
 +	elseif(MSVC AND CMAKE_GENERATOR_PLATFORM MATCHES "x64")
- 		set_target_properties(steam PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/win64/steam_api64.dll)
++		add_library(steam STATIC IMPORTED)
++		set_target_properties(steam PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/win64/steam_api64.lib)
  	else()
- 		set_target_properties(steam PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/steam_api.dll)
+-		set_target_properties(steam PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/steam_api.dll)
++		add_library(steam STATIC IMPORTED)
++		set_target_properties(steam PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/steam_api.lib)
  	endif()
  	target_include_directories(simutrans PRIVATE ${CMAKE_SOURCE_DIR}/sdk/public/steam)
 -	target_link_libraries(simutrans PUBLIC steam)
@@ -26,7 +31,7 @@ Index: CMakeLists.txt
  endif ()
  
  #
-@@ -310,10 +311,6 @@
+@@ -310,10 +314,6 @@
  	target_compile_definitions(simutrans PRIVATE USE_IP4_ONLY=1)
  endif ()
  
