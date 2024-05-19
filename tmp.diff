@@ -51,3 +51,18 @@ Index: cmake/SimutransInstall.cmake
 +	endif()
 +endif()
 \ No newline at end of file
+Index: src/steam/steam.cc
+===================================================================
+--- src/steam/steam.cc	(revisión: 11213)
++++ src/steam/steam.cc	(copia de trabajo)
+@@ -17,8 +17,8 @@
+ #include "isteamutils.h"
+ #include "steam_api.h"
+ 
+-int MAX_WORKSHOP_ITEMS = 1000;	// API fetch limit
+-int MAX_TAG_LENGTH = 100;
++#define MAX_WORKSHOP_ITEMS 1000	// API fetch limit
++#define MAX_TAG_LENGTH 100
+ 
+ steam_t* steam_t::steam = nullptr;
+ 
