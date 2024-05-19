@@ -32,7 +32,7 @@ jobs:
         ./bootstrap-vcpkg.bat
         ./vcpkg --triplet x64-windows install zlib bzip2 libpng zstd sdl2 freetype miniupnpc
         cd ..
-        cmake.exe -S . -B build -G "Visual Studio 16 2019" -A x64 -DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake
+        cmake.exe -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake
         cmake.exe --build build --target install --config Release
 
     - name: Build zipfile
