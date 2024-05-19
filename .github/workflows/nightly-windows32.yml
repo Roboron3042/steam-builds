@@ -1,7 +1,7 @@
 # This workflow sets up and runs MSBuild and VSTest
 # to build and test a Visual Studio solution.
 
-name: Nightly Built Windows64 SDL2
+name: Nightly Built Windows32
 
 on: [push]
 
@@ -18,34 +18,37 @@ jobs:
 
     - name: Make NSIS
       shell: pwsh
-      run:
+      run: |
+        svn checkout svn://servers.simutrans.org/simutrans/trunk . #-r 10421
         ./.github/prepare-nsis.ps1
 
     - name: Run MSBuild
       shell: pwsh
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: |
+        rm vcpkg.json
         git clone https://github.com/Microsoft/vcpkg.git
         cd vcpkg
         ./bootstrap-vcpkg.bat
-        ./vcpkg integrate install
+        ./vcpkg --triplet x86-windows install zlib bzip2 libpng zstd sdl2 freetype miniupnpc
         cd ..
-        msbuild /m .\Simutrans-SDL2.vcxproj -p:Configuration=Release /p:platform=x64
+        cmake.exe -S . -B build -G "Visual Studio 16 2019" -A x86 -DCMAKE_TOOLCHAIN_FILE=[vcpkg-root]/scripts/buildsystems/vcpkg.cmake --target install
 
     - name: Build zipfile
       shell: pwsh
       run: |
-        move-item "build/SDL2/Simutrans SDL2 Nightly.exe" "simutrans/simutrans.exe"
-        move-item "src\Windows\nsis\download-paksets.exe" "simutrans/download-pakset.exe"
-        tools/get_lang_files.ps1
-        Compress-Archive -Path simutrans -DestinationPath "simuwin64-SDL2-nightly.zip"
-        dir
+        cd build
+        mkdir 434634
+        move-item "simutrans/simutrans.exe" "434634/simutrans.exe"
+        cd 434634
+        #move-item "src\Windows\nsis\download-paksets.exe" "simutrans/download-pakset.exe"
+        Compress-Archive -Path . -DestinationPath "windows32-434634.zip"
 
-    - name: Update binaries of Nightly Release
+    - name: Update windows 32 depot
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./simuwin64-SDL2-nightly.zip
-        asset_name: simuwin64-SDL2-nightly.zip
+        file: build/434634/windows64-434634.zip
+        asset_name: windows64-434634.zip
         tag: Nightly
         overwrite: true
