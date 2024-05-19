@@ -23,7 +23,7 @@ Index: cmake/MacBundle.cmake
  set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR})
  
 +if (SIMUTRANS_STEAM_BUILT)
-+	install(FILES ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/osx/libsteam_api.dylib DESTINATION ${CMAKE_BINARY_DIR}/simutrans/simutrans.app/Contents/MacOS/libsteam_api.dylib)
++	install(FILES ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/osx/libsteam_api.dylib DESTINATION ${CMAKE_BINARY_DIR}/simutrans/simutrans.app/Contents/Frameworks/libsteam_api.dylib)
 +endif ()
 +
  install(CODE "
@@ -33,7 +33,7 @@ Index: cmake/SimutransInstall.cmake
 ===================================================================
 --- cmake/SimutransInstall.cmake	(revisión: 11213)
 +++ cmake/SimutransInstall.cmake	(copia de trabajo)
-@@ -114,3 +114,12 @@
+@@ -114,3 +114,16 @@
  				FOLLOW_SYMLINK_CHAIN)
  	]])
  endif ()
@@ -42,7 +42,11 @@ Index: cmake/SimutransInstall.cmake
 +# Include steam library (for some reason it is not done automagically as others)
 +#
 +if (SIMUTRANS_STEAM_BUILT)
-+	if(UNIX AND NOT APPLE) # For Apple it was already done in MacBundle.cmake
++	if(MSVC AND CMAKE_GENERATOR_PLATFORM MATCHES "Win32")
++		install(FILES  ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/steam_api.dll DESTINATION ${CMAKE_BINARY_DIR}/simutrans/steam_api.dll)
++	elseif(MSVC AND CMAKE_GENERATOR_PLATFORM MATCHES "x64")
++		install(FILES  ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/win64/steam_api64.dll DESTINATION ${CMAKE_BINARY_DIR}/simutrans/steam_api64.dll)
++	elseif(UNIX AND NOT APPLE) # For Apple it was already done in MacBundle.cmake
 +		install(FILES  ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/linux64/libsteam_api.so DESTINATION ${CMAKE_BINARY_DIR}/simutrans/lib/libsteam_api.so)
 +	endif()
 +endif()

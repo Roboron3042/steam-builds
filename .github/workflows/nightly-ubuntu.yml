@@ -49,9 +49,6 @@ jobs:
         cd ..
         # Linux libraries
         mv simutrans/lib 434635/lib
-        # For some reason this path is not resolved by CMake GET_RUNTIME_DEPENDENCIES
-        # Manually copying should work as we set rpath...
-        cp ../sdk/redistributable_bin/linux64/libsteam_api.so 434635/lib/
         cd 434635
         zip -r linux-libs-434635.zip lib
         cd ..
