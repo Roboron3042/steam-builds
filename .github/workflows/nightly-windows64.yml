@@ -43,7 +43,7 @@ jobs:
         Move-Item -Path simutrans\*.exe -Destination 434522
         Move-Item -Path simutrans\*.dll -Destination 434522
         cd 434522
-        Compress-Archive -Path . -DestinationPath "windows64-434522.zip"
+        Compress-Archive -Path *.* -DestinationPath "windows64-434522.zip"
 
     - name: Update windows 64 depot
       uses: svenstaro/upload-release-action@v2
