@@ -1,12 +1,12 @@
 # This workflow sets up and runs MSBuild and VSTest
 # to build and test a Visual Studio solution.
 
-name: Nightly Built Windows32
+name: Nightly Built Windows 32
 
 on: [push]
 
 jobs:
-  winSDL2-64:
+  build:
    runs-on: windows-latest
    steps:
     - name: Setup MSBuild and add to PATH
@@ -32,7 +32,8 @@ jobs:
         ./bootstrap-vcpkg.bat
         ./vcpkg --triplet x86-windows install zlib bzip2 libpng zstd sdl2 freetype miniupnpc
         cd ..
-        cmake.exe -S . -B build -G "Visual Studio 16 2019" -A x86 -DCMAKE_TOOLCHAIN_FILE=[vcpkg-root]/scripts/buildsystems/vcpkg.cmake --target install
+        cmake.exe -S . -B build -G "Visual Studio 16 2019" -A x86 -DCMAKE_TOOLCHAIN_FILE=vcpkg/scripts/buildsystems/vcpkg.cmake
+        cmake.exe --build build --target install --config Release
 
     - name: Build zipfile
       shell: pwsh
