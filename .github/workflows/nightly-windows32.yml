@@ -40,9 +40,8 @@ jobs:
       run: |
         cd build
         mkdir 434634
-        move-item "simutrans/simutrans.exe" "434634/simutrans.exe"
-        cd 434634
-        #move-item "src\Windows\nsis\download-paksets.exe" "simutrans/download-pakset.exe"
+        Move-Item -Path simutrans\*.exe -Destination 434522
+        Move-Item -Path simutrans\*.dll -Destination 434522
         Compress-Archive -Path . -DestinationPath "windows32-434634.zip"
 
     - name: Update windows 32 depot
