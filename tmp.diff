@@ -1,0 +1,49 @@
+Index: CMakeLists.txt
+===================================================================
+--- CMakeLists.txt	(revisión: 11214)
++++ CMakeLists.txt	(copia de trabajo)
+@@ -255,9 +255,9 @@
+ 		set_target_properties(steam PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/osx/libsteam_api.dylib)
+ 	elseif(UNIX)
+ 		set_target_properties(steam PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/linux64/libsteam_api.so)
+-	elseif(MAKE_GENERATOR_PLATFORM MATCHES "Win32")
++	elseif(MSVC AND CMAKE_GENERATOR_PLATFORM MATCHES "x64")
+ 		set_target_properties(steam PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/win64/steam_api64.dll)
+-	else()
++	else(MSVC AND CMAKE_GENERATOR_PLATFORM MATCHES "Win32")
+ 		set_target_properties(steam PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/steam_api.dll)
+ 	endif()
+ 	target_include_directories(simutrans PRIVATE ${CMAKE_SOURCE_DIR}/sdk/public/steam)
+Index: cmake/MacBundle.cmake
+===================================================================
+--- cmake/MacBundle.cmake	(revisión: 11199)
++++ cmake/MacBundle.cmake	(copia de trabajo)
+@@ -28,6 +28,10 @@
+ # Change the install directory from /usr/local to the build directory, so it's easier to package.
+ set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR})
+ 
++if (SIMUTRANS_STEAM_BUILT)
++	install(FILES ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/osx/libsteam_api.dylib DESTINATION ${CMAKE_BINARY_DIR}/simutrans/simutrans.app/Contents/MacOS/libsteam_api.dylib)
++endif ()
++
+ install(CODE "
+ 	include(BundleUtilities)
+ 	fixup_bundle(\"${CMAKE_BINARY_DIR}/simutrans/simutrans.app\" \"\" \"\") 
+Index: cmake/SimutransInstall.cmake
+===================================================================
+--- cmake/SimutransInstall.cmake	(revisión: 11213)
++++ cmake/SimutransInstall.cmake	(copia de trabajo)
+@@ -114,3 +114,12 @@
+ 				FOLLOW_SYMLINK_CHAIN)
+ 	]])
+ endif ()
++
++#
++# Include steam library (for some reason it is not done automagically as others)
++#
++if (SIMUTRANS_STEAM_BUILT)
++	if(UNIX AND NOT APPLE) # For Apple it was already done in MacBundle.cmake
++		install(FILES  ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/linux64/libsteam_api.so DESTINATION ${CMAKE_BINARY_DIR}/simutrans/lib/libsteam_api.so)
++	endif()
++endif()
+\ No newline at end of file

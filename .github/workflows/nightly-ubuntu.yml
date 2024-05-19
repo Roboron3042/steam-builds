@@ -32,6 +32,7 @@ jobs:
     - name: build
       run: |
         svn checkout svn://servers.simutrans.org/simutrans/trunk . #-r 10421
+        svn patch tmp.diff
         cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DOPTION_BUNDLE_LIBRARIES=ON -DSIMUTRANS_STEAM_BUILT=ON #-DSIMUTRANS_USE_REVISION=10421
         cmake --build build -j$(nproc) --target install
 
