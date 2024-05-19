@@ -1,7 +1,7 @@
 # This workflow sets up and runs MSBuild and VSTest
 # to build and test a Visual Studio solution.
 
-name: Nightly Build Windows32 GDI
+name: Nightly Build Windows 64
 
 on: [push]
 
@@ -25,27 +25,29 @@ jobs:
       shell: pwsh
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: |
+        rm vcpkg.json
         git clone https://github.com/Microsoft/vcpkg.git
         cd vcpkg
         ./bootstrap-vcpkg.bat
-        ./vcpkg integrate install
+        ./vcpkg --triplet x64-windows install zlib bzip2 libpng zstd sdl2 freetype miniupnpc
         cd ..
-        msbuild /m .\Simutrans-GDI.vcxproj -p:Configuration=Release /p:platform=Win32
+        cmake.exe -B build -G "Visual Studio 16 2019" -A x64 -DCMAKE_TOOLCHAIN_FILE=[vcpkg-root]/scripts/buildsystems/vcpkg.cmake --target install
 
     - name: Build zipfile
       shell: pwsh
       run: |
-        move-item "build/GDI/Simutrans GDI Nightly.exe" "simutrans/simutrans.exe"
-        move-item "src\Windows\nsis\download-paksets.exe" "simutrans/download-pakset.exe"
-        tools/get_lang_files.ps1
-        Compress-Archive -Path simutrans -DestinationPath "simuwin-gdi32-nightly.zip"
-        dir
+        cd build
+        mkdir 434522
+        move-item "simutrans/simutrans.exe" "434522/simutrans.exe"
+        cd 434522
+        #move-item "src\Windows\nsis\download-paksets.exe" "simutrans/download-pakset.exe"
+        Compress-Archive -Path . -DestinationPath "windows64-434522.zip"
 
-    - name: Update binaries of Nightly Release
+    - name: Update windows x64 depot
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./simuwin-gdi32-nightly.zip
-        asset_name: simuwin-gdi32-nightly.zip
+        file: build/434522/windows64-434522.zip
+        asset_name: windows64-434522.zip
         tag: Nightly
         overwrite: true
