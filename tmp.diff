@@ -1,112 +1,434 @@
-Index: CMakeLists.txt
+Index: Makefile
 ===================================================================
---- CMakeLists.txt	(revisión: 11214)
-+++ CMakeLists.txt	(copia de trabajo)
-@@ -249,6 +249,7 @@
- endif ((SIMUTRANS_BACKEND STREQUAL "sdl2") OR (SIMUTRANS_BACKEND STREQUAL "gdi"))
- 
- if (SIMUTRANS_STEAM_BUILT AND NOT ANDROID)
-+	target_compile_definitions(simutrans PRIVATE STEAM_BUILT=1)
- 	target_sources(simutrans PRIVATE src/steam/steam.cc src/steam/workshop_item.cc src/steam/achievements.cc )
- 	add_library(steam SHARED IMPORTED)
- 	if(APPLE)
-@@ -255,13 +256,15 @@
- 		set_target_properties(steam PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/osx/libsteam_api.dylib)
- 	elseif(UNIX)
- 		set_target_properties(steam PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/linux64/libsteam_api.so)
--	elseif(MAKE_GENERATOR_PLATFORM MATCHES "Win32")
-+	elseif(MSVC AND CMAKE_GENERATOR_PLATFORM MATCHES "x64")
- 		set_target_properties(steam PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/win64/steam_api64.dll)
--	else()
-+		set_target_properties(steam PROPERTIES IMPORTED_IMPLIB ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/win64/steam_api64.lib)
-+	else(MSVC AND CMAKE_GENERATOR_PLATFORM MATCHES "Win32")
- 		set_target_properties(steam PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/steam_api.dll)
-+		set_target_properties(steam PROPERTIES IMPORTED_IMPLIB ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/steam_api.lib)
- 	endif()
- 	target_include_directories(simutrans PRIVATE ${CMAKE_SOURCE_DIR}/sdk/public/steam)
--	target_link_libraries(simutrans PUBLIC steam)
-+	target_link_libraries(simutrans PRIVATE steam)
- endif ()
- 
- #
-@@ -310,10 +313,6 @@
- 	target_compile_definitions(simutrans PRIVATE USE_IP4_ONLY=1)
- endif ()
- 
--if (SIMUTRANS_STEAM_BUILT)
--	target_compile_definitions(simutrans PRIVATE STEAM_BUILT=1)
--endif ()
--
- if (SIMUTRANS_USE_OWN_PAKINSTALL)
- 	target_compile_definitions(simutrans PRIVATE USE_OWN_PAKINSTALL=1)
- endif ()
-Index: cmake/MacBundle.cmake
+--- Makefile	(revisión: 11217)
++++ Makefile	(copia de trabajo)
+@@ -569,6 +569,7 @@
+ SOURCES += src/simutrans/script/script.cc
+ SOURCES += src/simutrans/script/script_loader.cc
+ SOURCES += src/simutrans/script/script_tool_manager.cc
++SOURCES += src/simutrans/simachievements.cc
+ SOURCES += src/simutrans/simconvoi.cc
+ SOURCES += src/simutrans/simdebug.cc
+ SOURCES += src/simutrans/simevent.cc
+Index: Simutrans-Main.vcxitems
 ===================================================================
---- cmake/MacBundle.cmake	(revisión: 11199)
-+++ cmake/MacBundle.cmake	(copia de trabajo)
-@@ -28,6 +28,10 @@
- # Change the install directory from /usr/local to the build directory, so it's easier to package.
- set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR})
+--- Simutrans-Main.vcxitems	(revisión: 11217)
++++ Simutrans-Main.vcxitems	(copia de trabajo)
+@@ -292,6 +292,7 @@
+     <ClCompile Include="$(MSBuildThisFileDirectory)src\simutrans\script\script.cc" />
+     <ClCompile Include="$(MSBuildThisFileDirectory)src\simutrans\script\script_loader.cc" />
+     <ClCompile Include="$(MSBuildThisFileDirectory)src\simutrans\script\script_tool_manager.cc" />
++    <ClCompile Include="$(MSBuildThisFileDirectory)src\simutrans\simachievements.cc" />
+     <ClCompile Include="$(MSBuildThisFileDirectory)src\simutrans\simconvoi.cc" />
+     <ClCompile Include="$(MSBuildThisFileDirectory)src\simutrans\simdebug.cc" />
+     <ClCompile Include="$(MSBuildThisFileDirectory)src\simutrans\simevent.cc" />
+Index: cmake/SimutransSourceList.cmake
+===================================================================
+--- cmake/SimutransSourceList.cmake	(revisión: 11217)
++++ cmake/SimutransSourceList.cmake	(copia de trabajo)
+@@ -277,6 +277,7 @@
+ 		src/simutrans/script/script.cc
+ 		src/simutrans/script/script_loader.cc
+ 		src/simutrans/script/script_tool_manager.cc
++		src/simutrans/simachievements.cc
+ 		src/simutrans/simconvoi.cc
+ 		src/simutrans/simdebug.cc
+ 		src/simutrans/simevent.cc
+Index: src/simutrans/obj/gebaeude.cc
+===================================================================
+--- src/simutrans/obj/gebaeude.cc	(revisión: 11217)
++++ src/simutrans/obj/gebaeude.cc	(copia de trabajo)
+@@ -27,6 +27,7 @@
+ #include "../simdebug.h"
+ #include "../simintr.h"
+ #include "../simskin.h"
++#include "../simachievements.h"
  
-+if (SIMUTRANS_STEAM_BUILT)
-+	install(FILES ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/osx/libsteam_api.dylib DESTINATION ${CMAKE_BINARY_DIR}/simutrans/simutrans.app/Contents/MacOS)
-+endif ()
+ #include "../ground/grund.h"
+ 
+@@ -591,6 +592,7 @@
+ 			}
+ 			// open info window for the first tile of our building (not relying on presence of (0,0) tile)
+ 			first_tile->obj_t::show_info();
++			simachievements_t::check_query_ach(tile->get_desc()->get_name());
+ 		}
+ 	}
+ }
+Index: src/simutrans/simachenum.h
+===================================================================
+--- src/simutrans/simachenum.h	(nonexistent)
++++ src/simutrans/simachenum.h	(copia de trabajo)
+@@ -0,0 +1,12 @@
++// IMPORTANT! CHANGE THIS ON NEW ACHIEVEMENTS ADDITION
++#define NUM_ACHIEVEMENTS 2
 +
- install(CODE "
- 	include(BundleUtilities)
- 	fixup_bundle(\"${CMAKE_BINARY_DIR}/simutrans/simutrans.app\" \"\" \"\") 
-Index: cmake/SimutransInstall.cmake
-===================================================================
---- cmake/SimutransInstall.cmake	(revisión: 11213)
-+++ cmake/SimutransInstall.cmake	(copia de trabajo)
-@@ -114,3 +114,16 @@
- 				FOLLOW_SYMLINK_CHAIN)
- 	]])
- endif ()
++// Why a macro for this? Check steam/achievements.cc
++#define ACHIEVEMENTS     \
++	X(LOAD_PAK192_COMIC) \
++	X(QUERY_DICTACTOR)
 +
-+#
-+# Include steam library (for some reason it is not done automagically as others)
-+#
-+if (SIMUTRANS_STEAM_BUILT)
-+	if(MSVC AND CMAKE_GENERATOR_PLATFORM MATCHES "Win32")
-+		install(FILES  ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/steam_api.dll DESTINATION ${CMAKE_BINARY_DIR}/simutrans/steam_api.dll)
-+	elseif(MSVC AND CMAKE_GENERATOR_PLATFORM MATCHES "x64")
-+		install(FILES  ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/win64/steam_api64.dll DESTINATION ${CMAKE_BINARY_DIR}/simutrans/steam_api64.dll)
-+	elseif(UNIX AND NOT APPLE) # For Apple it was already done in MacBundle.cmake
-+		install(FILES  ${CMAKE_SOURCE_DIR}/sdk/redistributable_bin/linux64/libsteam_api.so DESTINATION ${CMAKE_BINARY_DIR}/simutrans/lib/libsteam_api.so)
-+	endif()
-+endif()
++
++#define X(id) id,
++enum simachievements_enum { ACHIEVEMENTS };
++#undef X
 \ No newline at end of file
+Index: src/simutrans/simachievements.cc
+===================================================================
+--- src/simutrans/simachievements.cc	(nonexistent)
++++ src/simutrans/simachievements.cc	(copia de trabajo)
+@@ -0,0 +1,28 @@
++#include "simachievements.h"
++
++#include "./dataobj/environment.h"
++#include "./simdebug.h"
++#include "./utils/simstring.h"
++
++#ifdef STEAM_BUILT
++#include "../steam/steam.h"
++#endif
++
++void simachievements_t::check_pakset_ach() {
++	if (!STRICMP(env_t::pak_name.c_str(), "pak192.comic/")) {
++		set_achievement(LOAD_PAK192_COMIC);
++	}
++}
++
++void simachievements_t::check_query_ach(const char* object_name) {
++	if (!STRICMP(env_t::pak_name.c_str(), "pak128/") && strstr(object_name, "rmax_dictator_statue")) {
++		set_achievement(QUERY_DICTACTOR);
++	}
++}
++
++void simachievements_t::set_achievement(simachievements_enum ach) {
++	dbg->message("simachievements_t::set_achievement()", "Unlocking achievement %d", ach);
++#ifdef STEAM_BUILT
++	steam_t::get_instance()->get_achievements()->set_achievement(ach);
++#endif
++}
+\ No newline at end of file
+Index: src/simutrans/simachievements.h
+===================================================================
+--- src/simutrans/simachievements.h	(nonexistent)
++++ src/simutrans/simachievements.h	(copia de trabajo)
+@@ -0,0 +1,20 @@
++#include "./simachenum.h"
++
++/**
++ * Manages the achievement system. This currently only works for Steam achievements.
++ * TODO: It would be cool to have our own achievement system!
++ */
++class simachievements_t {
++private:
++	// Set the given achievement.
++	static void set_achievement(simachievements_enum ach);
++
++public:
++	// Check achievements for loading the current pakset
++	static void check_pakset_ach();
++
++	// Check achievements for querying a specific object
++	static void check_query_ach(const char* object_name);
++
++	// TODO: A function to set achievement from script tools (for scenarios, tutorial, etc...)
++};
+\ No newline at end of file
+Index: src/simutrans/simmain.cc
+===================================================================
+--- src/simutrans/simmain.cc	(revisión: 11217)
++++ src/simutrans/simmain.cc	(copia de trabajo)
+@@ -44,6 +44,7 @@
+ #include "tool/simmenu.h"
+ #include "siminteraction.h"
+ #include "simtypes.h"
++#include "simachievements.h"
+ 
+ #include "sys/simsys.h"
+ #include "display/simgraph.h"
+@@ -1591,6 +1592,9 @@
+ 		create_win({ 0,0 }, new news_img("No soundfont found!\n\nMusic won't play until you load a soundfont from the sound options menu."), w_info, magic_none );
+ 	}
+ #endif
++
++	simachievements_t::check_pakset_ach();
++
+ 	while(  !env_t::quit_simutrans  ) {
+ 		// play next tune?
+ 		check_midi();
+Index: src/simutrans/utils/simstring.h
+===================================================================
+--- src/simutrans/utils/simstring.h	(revisión: 11217)
++++ src/simutrans/utils/simstring.h	(copia de trabajo)
+@@ -92,9 +92,12 @@
+ 
+ 
+ /**
+- * caseless strstr
+- * @return first caseless match
+- */
++ * strcasestr implementation. Search for a pattern in a given string, ignoring case.
++ * @param str: String to search in
++ * @param pattern: The pattern we are looking for.
++ * @returns: A char pointer to the start of the pattern we are looking for in the given string, or NULL if not found.
++ * Original code written by Clifford and shared at StackOverflow: https://stackoverflow.com/a/27304609
++*/
+ char* tstrcasestr(const char* str, const char* pattern);
+ 
+ 
+Index: src/simutrans/world/simworld.cc
+===================================================================
+--- src/simutrans/world/simworld.cc	(revisión: 11217)
++++ src/simutrans/world/simworld.cc	(copia de trabajo)
+@@ -2003,10 +2003,7 @@
+ 	last_interaction = dr_time();
+ 	step_mode = PAUSE_FLAG;
+ 	time_multiplier = 16;
+-	next_midi_time = next_step_time = 0;
+-#ifdef STEAM_BUILT
+-	next_steam_ui_time = 0;
+-#endif
++	next_midi_time = next_step_time = next_misc_time = 0;
+ 	fix_ratio_frame_time = 200;
+ 	idle_time = 0;
+ 	network_frame_count = 0;
+@@ -6132,12 +6129,12 @@
+ 		uint32 time = dr_time();
+ 
+ 
++		if(  (sint32)next_misc_time - (sint32)time <=0  ) {
+ #ifdef STEAM_BUILT
+-		if(  (sint32)next_steam_ui_time - (sint32)time <=0  ) {
+ 			steam_t::get_instance()->update_ui(get_last_year(), convoys().get_count());
+-			next_steam_ui_time = time + 5000; // update ui every 5s
++#endif
++			next_misc_time = time + 5000; // every 5s
+ 		}
+-#endif
+ 
+ 		// check midi if next songs needs to be started
+ 		if(  (sint32)next_midi_time - (sint32)time <= 0  ) {
+Index: src/simutrans/world/simworld.h
+===================================================================
+--- src/simutrans/world/simworld.h	(revisión: 11217)
++++ src/simutrans/world/simworld.h	(copia de trabajo)
+@@ -382,9 +382,11 @@
+ 	*/
+ 	uint32 next_midi_time;
+ 
+-#ifdef STEAM_BUILT
+-	uint32 next_steam_ui_time;
+-#endif
++	/**
++	 * Miscellaneus stuff that do not need to be updated frequently
++	 * Currently used for rich presence and achievements
++	*/
++	uint32 next_misc_time;
+ 
+ 	/// To calculate the fps and the simloops.
+ 	uint32 idle_time;
+Index: src/steam/achievements.cc
+===================================================================
+--- src/steam/achievements.cc	(revisión: 11217)
++++ src/steam/achievements.cc	(copia de trabajo)
+@@ -1,14 +1,15 @@
+ #include "achievements.h"
+-
++#include "../simutrans/simachenum.h"
+ #include "../simutrans/simdebug.h"
+ #include "isteamuser.h"
+ #include "isteamutils.h"
+ 
+-int NUM_ACHIEVEMENTS = 1;
+-
+-achievement_t achievements_list[] = {
+-	_ACH_ID(PLAY_PAK192_COMIC, "Play Pak192.Comic"),
++// Generating the initial array from the enum. I love the X Macro, so powerful!
++#define X(id) { id, #id, "", "", 0, 0 },
++achievement_t  achievements_list[] = {
++	ACHIEVEMENTS
+ };
++#undef X
+ 
+ steam_achievements_t::steam_achievements_t()
+ 	: app_id(0),
+@@ -18,7 +19,6 @@
+ 	  m_CallbackAchievementStored(this, &steam_achievements_t::on_achievement_stored) {
+ 	app_id = SteamUtils()->GetAppID();
+ 	achievements = achievements_list;
+-	num_achievements = NUM_ACHIEVEMENTS;
+ 	request_stats();
+ }
+ 
+@@ -39,7 +39,7 @@
+ 			stats_initialized = true;
+ 
+ 			// load achievements
+-			for (int iAch = 0; iAch < num_achievements; ++iAch) {
++			for (int iAch = 0; iAch < NUM_ACHIEVEMENTS; ++iAch) {
+ 				achievement_t &ach = achievements[iAch];
+ 
+ 				SteamUserStats()->GetAchievement(ach.m_pchAchievementID, &ach.m_bAchieved);
+@@ -47,6 +47,11 @@
+ 				snprintf(ach.m_rgchDescription, sizeof(ach.m_rgchDescription), "%s",
+ 						 SteamUserStats()->GetAchievementDisplayAttribute(ach.m_pchAchievementID, "desc"));
+ 			}
++			// retry achievements sent before the callback completed
++			for (int ach_id : achievements_queue) {
++				set_achievement(ach_id);
++			}
++			achievements_queue.clear();
+ 		} else {
+ 			dbg->error("steam_achievements_t::on_user_stats_received", "RequestStats - failed, %d\n", callback->m_eResult);
+ 		}
+@@ -69,11 +74,14 @@
+ 	}
+ }
+ 
+-bool steam_achievements_t::set_achievement(const char *ID) {
+-	if (stats_initialized) {
+-		dbg->message("steam_achievements_t::set_achievement", "Earned achievement %s\n", ID);
+-		SteamUserStats()->SetAchievement(ID);
++bool steam_achievements_t::set_achievement(int ach_enum) {
++	if (stats_initialized && !achievements[ach_enum].m_bAchieved) {
++		dbg->message("steam_achievements_t::set_achievement", "Earned achievement %s\n", achievements[ach_enum].m_pchAchievementID);
++		SteamUserStats()->SetAchievement(achievements[ach_enum].m_pchAchievementID);
+ 		return SteamUserStats()->StoreStats();
++	} else {
++		// Too early! Add them to the queue to retry on_user_stats_received
++		achievements_queue.push_back(ach_enum);
+ 	}
+ 	return false;
+ }
+\ No newline at end of file
+Index: src/steam/achievements.h
+===================================================================
+--- src/steam/achievements.h	(revisión: 11217)
++++ src/steam/achievements.h	(copia de trabajo)
+@@ -1,10 +1,7 @@
+ #include "isteamuserstats.h"
+ #include "steam_api.h"
++#include <vector>
+ 
+-enum EAchievements {
+-	PLAY_PAK192_COMIC = 0,
+-};
+-
+ struct achievement_t {
+ 	int m_eAchievementID;
+ 	const char *m_pchAchievementID;
+@@ -14,21 +11,19 @@
+ 	int m_iIconImage;
+ };
+ 
+-#define _ACH_ID(id, name) \
+-	{ id, #id, name, "", 0, 0 }
+-
+ class steam_achievements_t {
+ private:
+ 	uint64 app_id;
+ 	achievement_t *achievements;
+-	int num_achievements;
+ 	bool stats_initialized;
++	std::vector<int> achievements_queue;
+ 
+ public:
+ 	steam_achievements_t();
+ 
+ 	bool request_stats();
+-	bool set_achievement(const char *ID);
++	// Note: not declaring type as "simachievements_enum" instead of "int" to avoid circular dependency issues
++	bool set_achievement(int ach_enum);
+ 	achievement_t *get_achievements() { return achievements; };
+ 
+ 	STEAM_CALLBACK(steam_achievements_t, on_user_stats_received, UserStatsReceived_t, m_CallbackUserStatsReceived);
 Index: src/steam/steam.cc
 ===================================================================
---- src/steam/steam.cc	(revisión: 11213)
+--- src/steam/steam.cc	(revisión: 11217)
 +++ src/steam/steam.cc	(copia de trabajo)
-@@ -17,8 +17,8 @@
+@@ -10,9 +10,7 @@
+ #include <fstream>
+ 
+ #include "../simutrans/dataobj/environment.h"
+-#include "../simutrans/io/rdwr/raw_file_rdwr_stream.h"
+ #include "../simutrans/simdebug.h"
+-#include "../simutrans/utils/simstring.h"
+ #include "isteamugc.h"
  #include "isteamutils.h"
  #include "steam_api.h"
+@@ -26,7 +24,7 @@
+ 	if (!(is_api_initialized = SteamAPI_Init())) {
+ 		dbg->warning("steam_t::steam_t()", "Steam API Initialization FAILED, Steam functionality won't be available!");
+ 	} else {
+-		g_SteamAchievements = new steam_achievements_t();
++		steam_achievements = new steam_achievements_t();
+ 	}
+ }
  
--int MAX_WORKSHOP_ITEMS = 1000;	// API fetch limit
--int MAX_TAG_LENGTH = 100;
-+#define MAX_WORKSHOP_ITEMS 1000	// API fetch limit
-+#define MAX_TAG_LENGTH 100
+@@ -232,21 +230,11 @@
+ 	SteamFriends()->SetRichPresence("year", std::to_string(year).c_str());
+ 	SteamFriends()->SetRichPresence("convoys", std::to_string(total_convoys).c_str());
+ 	SteamFriends()->SetRichPresence("steam_display", "#Playing");
+-	update_achievements();
+ 	SteamAPI_RunCallbacks();
+ }
  
- steam_t* steam_t::steam = nullptr;
+-void steam_t::update_achievements() {
+-	std::string pakset = env_t::pak_name;
+-	pakset.pop_back();	// Remove path separator
+-	achievement_t* achievements = g_SteamAchievements->get_achievements();
+-	if (tstrcasestr(pakset.c_str(), "pak192.comic") && !achievements[PLAY_PAK192_COMIC].m_bAchieved) {
+-		g_SteamAchievements->set_achievement(achievements[PLAY_PAK192_COMIC].m_pchAchievementID);
+-	}
+-}
+-
+ void steam_t::shutdown() {
+ 	SteamAPI_Shutdown();
+-	if (g_SteamAchievements)
+-		delete g_SteamAchievements;
++	if (steam_achievements)
++		delete steam_achievements;
+ }
+\ No newline at end of file
+Index: src/steam/steam.h
+===================================================================
+--- src/steam/steam.h	(revisión: 11217)
++++ src/steam/steam.h	(copia de trabajo)
+@@ -22,7 +22,7 @@
  
-@@ -55,7 +55,7 @@
+ 	static steam_t* steam;
  
- 	int num_subscribed_items = SteamUGC()->GetNumSubscribedItems();
+-	steam_achievements_t* g_SteamAchievements = NULL;
++	steam_achievements_t* steam_achievements = NULL;
  
--	PublishedFileId_t subscribed_items[num_subscribed_items];
-+	PublishedFileId_t subscribed_items[MAX_WORKSHOP_ITEMS];
- 	SteamUGC()->GetSubscribedItems(subscribed_items, num_subscribed_items);
+ 	bool is_api_initialized = false;
+ 	bool is_installing = false;
+@@ -42,7 +42,6 @@
  
- 	existing_items = steam_t::uninstall_old_items(previously_installed_items, subscribed_items, num_subscribed_items);
-@@ -84,7 +84,7 @@
- 	std::vector<workshop_item_t> installed_items;
- 	if (!failure && callback->m_eResult == 1) {
- 		int num_results = callback->m_unNumResultsReturned;
--		int num_tags_vector[num_results];
-+		int num_tags_vector[MAX_WORKSHOP_ITEMS];
+ 	std::vector<workshop_item_t> uninstall_old_items(std::vector<workshop_item_t> installed_items, PublishedFileId_t subscribed_items[],
+ 													 int num_subscribed_items);
+-	void update_achievements();
  
- 		for (int result_index = 0; result_index < num_results; result_index++) {
- 			num_tags_vector[result_index] = SteamUGC()->GetQueryUGCNumTags(callback->m_handle, result_index);
+ public:
+ 	static steam_t* get_instance();
+@@ -51,6 +50,8 @@
+ 
+ 	void update_ui(uint32 year, uint32 total_convoys);
+ 
++	steam_achievements_t* get_achievements() { return steam_achievements; }
++
+ 	void shutdown();
+ 
+ };
+Index: src/steam/workshop_item.h
+===================================================================
+--- src/steam/workshop_item.h	(revisión: 11217)
++++ src/steam/workshop_item.h	(copia de trabajo)
+@@ -18,7 +18,8 @@
+ 	workshop_item_t(PublishedFileId_t id, std::string title);
+ 
+ 	/**
+-	 * Sets the category tag. It will fail and return false if it is not "pakset", "scenario", "map", or "addon"
++	 * Sets the category tag. It must be "pakset", "scenario", "map", or "addon"
++	 * @returns false if it was unable to set category
+ 	 */
+ 	bool set_category_tag(std::string tag);
+ 	bool add_pakset_tag(std::string tag);
