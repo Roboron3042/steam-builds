@@ -31,7 +31,7 @@ jobs:
         git clone https://github.com/Microsoft/vcpkg.git
         cd vcpkg
         ./bootstrap-vcpkg.bat
-        ./vcpkg --triplet x86-windows install zlib bzip2 libpng zstd sdl2 freetype miniupnpc #fluidsynth
+        ./vcpkg --triplet x86-windows install zlib bzip2 libpng zstd sdl2 freetype miniupnpc fluidsynth
         cd ..
         cmake.exe -S . -B build -G "Visual Studio 17 2022" -A Win32 -DCMAKE_TOOLCHAIN_FILE="vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET="x86-windows" -DSIMUTRANS_STEAM_BUILT=ON
         cmake.exe --build build --target install --config Release
@@ -44,7 +44,7 @@ jobs:
         Move-Item -Path simutrans\*.exe -Destination 434634
         Move-Item -Path simutrans\*.dll -Destination 434634
         cd 434634
-        Compress-Archive -Path . -DestinationPath "windows32-434634.zip"
+        Compress-Archive -Path *.* -DestinationPath "windows32-434634.zip"
 
     - name: Update windows 32 depot
       uses: svenstaro/upload-release-action@v2
