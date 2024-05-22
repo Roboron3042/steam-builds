@@ -58,7 +58,7 @@ Index: src/simutrans/simachievements.cc
 -		set_achievement(LOAD_PAK192_COMIC);
 +	std::string pak_name = env_t::pak_name;
 +	pak_name.erase(pak_name.length() - 1);
-+	if (STRICMP(env_t::pak_name.c_str(), "pak192.comic") == 0) {
++	if (STRICMP(pak_name.c_str(), "pak192.comic") == 0) {
 +		set_achievement(ACH_LOAD_PAK192_COMIC);
  	}
  }
