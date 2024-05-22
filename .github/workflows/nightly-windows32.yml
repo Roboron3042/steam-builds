@@ -51,6 +51,6 @@ jobs:
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: build/434634/windows32-434634.zip
-        asset_name: windows32-434634.zip
+        asset_name: 434634.zip
         tag: Nightly
         overwrite: true

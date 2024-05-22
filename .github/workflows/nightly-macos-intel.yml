@@ -34,6 +34,6 @@ jobs:
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: build/434524/macos-434524.zip
-        asset_name: macos-434524.zip
+        asset_name: 434524.zip
         tag: Nightly
         overwrite: true
