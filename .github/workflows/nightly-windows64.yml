@@ -35,7 +35,8 @@ jobs:
     - name: Build Simutrans
       shell: pwsh
       run: |
-        cmake.exe -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE="vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET="x64-windows" -DSIMUTRANS_STEAM_BUILT=ON -DSIMUTRANS_USE_FLUIDSYNTH_MIDI=ON
+        $REVISION = cat revision.txt
+        cmake.exe -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE="vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET="x64-windows" -DSIMUTRANS_STEAM_BUILT=ON -DSIMUTRANS_USE_FLUIDSYNTH_MIDI=ON -DSIMUTRANS_USE_REVISION=$REVISION
         cmake.exe --build build --target install --config Release
 
     - name: Build zipfile

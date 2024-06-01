@@ -15,7 +15,7 @@ jobs:
 
     - name: detect revision
       run: |
-        revision=$(cat revision.txt) >> $GITHUB_ENV
+        echo "revision=`cat revision.txt`" >> $GITHUB_ENV
 
     - name: set current head to nightly
       uses: richardsimko/update-tag@v1
