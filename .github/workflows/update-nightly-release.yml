@@ -15,8 +15,7 @@ jobs:
 
     - name: detect revision
       run: |
-        svn checkout svn://servers.simutrans.org/simutrans/trunk .
-        echo "revision=`tools/get_revision.sh`" >> $GITHUB_ENV
+        revision=$(cat revision.txt) >> $GITHUB_ENV
 
     - name: set current head to nightly
       uses: richardsimko/update-tag@v1
