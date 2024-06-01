@@ -37,4 +37,4 @@ jobs:
       uses: CyberAndrii/setup-steamcmd@v1
     
     - name: Update app
-      run: steamcmd +login "$STEAM_USER" "$STEAM_PASS" +quit
+      run: steamcmd +login ${{ secrets.STEAM_USER }} ${{ secrets.STEAM_PASS }} +quit
