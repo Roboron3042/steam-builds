@@ -32,9 +32,3 @@ jobs:
         tag: Nightly
         name: Nightly build r${{ env.revision }}
         allow_override: true
-
-    - name: Setup steamcmd
-      uses: CyberAndrii/setup-steamcmd@v1
-    
-    - name: Update app
-      run: steamcmd +login ${{ secrets.STEAM_USER }} ${{ secrets.STEAM_PASS }} +quit
